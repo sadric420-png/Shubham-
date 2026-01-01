@@ -1,0 +1,5 @@
+{
+  "name": "Excel Route Manager",
+  "description": "A professional tool for automating route reports by comparing sales data against a master database, extracting GPS coordinates, and generating standardized template-based reports.",
+  "requestFramePermissions": []
+}
