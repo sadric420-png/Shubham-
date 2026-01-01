@@ -24,7 +24,7 @@
     "react": "https://esm.sh/react@18.2.0?bundle",
     "react-dom": "https://esm.sh/react-dom@18.2.0?bundle",
     "react-dom/client": "https://esm.sh/react-dom@18.2.0/client?bundle",
-    "lucide-react": "https://esm.sh/lucide-react@0.294.0?bundle",
+    "lucide-react": "https://esm.sh/lucide-react@0.344.0?bundle",
     "xlsx": "https://esm.sh/xlsx@0.18.5?bundle",
     "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
     "react/": "https://esm.sh/react@^19.2.3/"
@@ -36,19 +36,23 @@
             var display = document.getElementById('error-display');
             if (display) {
                 display.style.display = 'block';
-                display.innerHTML += '<p style="color:red; border-bottom:1px solid #eee; padding-bottom:10px;"><b>Error:</b> ' + msg + '<br><small>' + url + ':' + lineNo + '</small></p>';
+                display.innerHTML += '<div style="color:red; border-bottom:1px solid #eee; padding:10px; margin-bottom:10px;">' +
+                    '<b>Critical Error:</b> ' + msg + '<br>' +
+                    '<small style="color:#666;">Location: ' + url + ' (Line: ' + lineNo + ')</small>' +
+                    '</div>';
             }
             return false;
         };
     </script>
 </head>
 <body class="bg-slate-50 text-slate-900">
-    <div id="error-display"><h3>App Error</h3></div>
+    <div id="error-display"><h3>System Diagnostic - Application Error</h3></div>
     <div id="root">
         <div class="flex items-center justify-center h-screen">
             <div class="text-center">
                 <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                <p class="text-slate-500 font-medium">Loading Route Manager...</p>
+                <p class="text-slate-500 font-medium text-lg">Loading Excel Route Manager...</p>
+                <p class="text-slate-400 text-sm mt-2">Checking compatibility and starting modules...</p>
             </div>
         </div>
     </div>
