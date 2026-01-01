@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { 
   FileUp, 
   CheckCircle2, 
@@ -12,8 +12,8 @@ import {
   RefreshCw,
   Plus
 } from 'lucide-react';
-import { AppStep, MasterRecord, SalesRecord, MissingParty, TemplateRow } from './types';
-import { readExcelFile, normalizeName, extractCoordinates, exportToExcel } from './excelUtils';
+import { AppStep, MasterRecord, SalesRecord, MissingParty, TemplateRow } from './types.ts';
+import { readExcelFile, normalizeName, extractCoordinates, exportToExcel } from './excelUtils.ts';
 
 const App: React.FC = () => {
   const [currentStep, setCurrentStep] = useState<AppStep>(AppStep.UPLOAD_INITIAL);
@@ -23,7 +23,6 @@ const App: React.FC = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // File states
   const [masterFileName, setMasterFileName] = useState<string>('');
   const [salesFileName, setSalesFileName] = useState<string>('');
 
@@ -42,6 +41,7 @@ const App: React.FC = () => {
         setSalesFileName(file.name);
       }
     } catch (err) {
+      console.error(err);
       setError(`Failed to read ${type} file. Please ensure it's a valid CSV or XLSX.`);
     }
   };
@@ -60,7 +60,6 @@ const App: React.FC = () => {
     salesData.forEach(sale => {
       const normName = normalizeName(sale["Party Name"]);
       if (!masterNames.has(normName)) {
-        // Only add if not already in missing list (handle duplicates in sales)
         if (!missing.find(m => normalizeName(m.name) === normName)) {
           missing.push({
             name: sale["Party Name"],
@@ -88,7 +87,6 @@ const App: React.FC = () => {
   };
 
   const finalizeMissingParties = () => {
-    // Virtually update master database
     const newMasterRecords: MasterRecord[] = missingParties.map(m => ({
       "Party Name": m.name,
       "Number": m.phone,
@@ -107,7 +105,6 @@ const App: React.FC = () => {
     try {
       const templateData = await readExcelFile(file) as TemplateRow[];
       
-      // We map all sales data to the final report
       const masterMap = new Map<string, MasterRecord>();
       masterData.forEach(m => masterMap.set(normalizeName(m["Party Name"]), m));
 
@@ -130,25 +127,15 @@ const App: React.FC = () => {
       exportToExcel(finalReport, "Updated_Route_Report.xlsx");
       setCurrentStep(AppStep.COMPLETE);
     } catch (err) {
+      console.error(err);
       setError("Error generating final report.");
     } finally {
       setIsProcessing(false);
     }
   };
 
-  const resetApp = () => {
-    setMasterData([]);
-    setSalesData([]);
-    setMissingParties([]);
-    setMasterFileName('');
-    setSalesFileName('');
-    setCurrentStep(AppStep.UPLOAD_INITIAL);
-    setError(null);
-  };
-
   return (
     <div className="min-h-screen pb-20">
-      {/* Header */}
       <header className="bg-white border-b border-slate-200 sticky top-0 z-10">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -168,7 +155,6 @@ const App: React.FC = () => {
       </header>
 
       <main className="max-w-5xl mx-auto px-4 sm:px-6 pt-8">
-        {/* Progress Tracker */}
         <div className="mb-10">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-500">
@@ -192,7 +178,6 @@ const App: React.FC = () => {
           </div>
         )}
 
-        {/* Step 1: Initial Upload */}
         {currentStep === AppStep.UPLOAD_INITIAL && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 flex flex-col items-center text-center">
@@ -267,7 +252,6 @@ const App: React.FC = () => {
           </div>
         )}
 
-        {/* Step 2: Missing Parties */}
         {currentStep === AppStep.VERIFY_MISSING && (
           <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
             <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
@@ -334,7 +318,6 @@ const App: React.FC = () => {
           </div>
         )}
 
-        {/* Step 3: Template Upload */}
         {currentStep === AppStep.UPLOAD_TEMPLATE && (
           <div className="max-w-2xl mx-auto">
             <div className="bg-white p-10 rounded-2xl shadow-sm border border-slate-200 flex flex-col items-center text-center">
@@ -369,10 +352,9 @@ const App: React.FC = () => {
           </div>
         )}
 
-        {/* Step 4: Completion */}
         {currentStep === AppStep.COMPLETE && (
           <div className="max-w-xl mx-auto text-center">
-            <div className="mb-10 inline-flex items-center justify-center w-24 h-24 rounded-full bg-emerald-50 border-4 border-emerald-100 animate-pulse">
+            <div className="mb-10 inline-flex items-center justify-center w-24 h-24 rounded-full bg-emerald-50 border-4 border-emerald-100">
               <CheckCircle2 className="w-12 h-12 text-emerald-600" />
             </div>
             <h2 className="text-3xl font-bold text-slate-800 mb-4">Report Generated Successfully!</h2>
@@ -387,51 +369,10 @@ const App: React.FC = () => {
               >
                 Start Over
               </button>
-              <button 
-                onClick={() => {
-                   // This just prompts a re-download of the same logic if they want
-                   alert("Your download should have started automatically. Check your downloads folder!");
-                }}
-                className="bg-slate-900 text-white px-8 py-4 rounded-2xl font-bold hover:bg-slate-800 transition-all shadow-lg shadow-slate-200 flex items-center justify-center gap-3"
-              >
-                <Download className="w-5 h-5" /> Download Report
-              </button>
             </div>
           </div>
         )}
       </main>
-
-      {/* Footer Instructions (Only on first step) */}
-      {currentStep === AppStep.UPLOAD_INITIAL && (
-        <footer className="max-w-5xl mx-auto px-4 mt-20">
-          <div className="bg-slate-100 rounded-2xl p-8 border border-slate-200">
-            <h4 className="text-slate-800 font-bold mb-4 flex items-center gap-2">
-              <AlertCircle className="w-5 h-5 text-slate-500" />
-              How it works
-            </h4>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
-              <div>
-                <span className="text-2xl font-black text-slate-200 block mb-2">01</span>
-                <p className="text-sm text-slate-600 leading-relaxed">
-                  Upload your <span className="font-semibold">Master DB</span> and <span className="font-semibold">Daily Sales</span>. We'll cross-check them instantly.
-                </p>
-              </div>
-              <div>
-                <span className="text-2xl font-black text-slate-200 block mb-2">02</span>
-                <p className="text-sm text-slate-600 leading-relaxed">
-                  Identify parties not found in Master. Fill in their details to keep your route data <span className="font-semibold">complete</span>.
-                </p>
-              </div>
-              <div>
-                <span className="text-2xl font-black text-slate-200 block mb-2">03</span>
-                <p className="text-sm text-slate-600 leading-relaxed">
-                  We scan addresses for <span className="font-semibold">GPS Coordinates</span> automatically and map everything to your template.
-                </p>
-              </div>
-            </div>
-          </div>
-        </footer>
-      )}
     </div>
   );
 };
